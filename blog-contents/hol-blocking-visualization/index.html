@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Head-of-Line Blocking 시각화 (개선)</title>
+    <style>
+        /* ① 전역 스타일 --------------------------------------------------- */
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family:Arial,Helvetica,sans-serif;
+            background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+            padding:24px
+        }
+        h1{font-size:28px;color:#fff}
+        h3{margin:0 0 8px}
+
+        .container{
+            max-width:1200px;margin:auto;
+            background:#fff;border-radius:16px;
+            box-shadow:0 20px 40px rgba(0,0,0,.12);overflow:hidden
+        }
+        .header{background:linear-gradient(135deg,#667eea,#764ba2);
+            padding:32px;text-align:center}
+        .content{padding:40px}
+
+        .section-title{
+            font-size:20px;font-weight:700;color:#333;
+            margin-bottom:24px;border-left:4px solid #667eea;
+            padding-left:16px
+        }
+
+        /* ② 고속도로 비유 -------------------------------------------------- */
+        .highway-wrapper{background:#e8f4f8;border-radius:12px;padding:32px}
+        .lane{position:relative;height:90px;margin-bottom:32px;
+            background:#555;border-radius:10px;overflow:hidden}
+        .lane:last-child{margin-bottom:0}
+        .lane::before{/* 중앙선 */
+            content:'';position:absolute;left:0;right:0;top:50%;height:3px;
+            background:repeating-linear-gradient(to right,#fff 0 18px,transparent 18px 36px);
+            transform:translateY(-50%);opacity:.8
+        }
+        .lane-label{
+            position:absolute;left:-110px;top:50%;
+            transform:translateY(-50%);font-weight:700;color:#333
+        }
+
+        /* ③ 차량 기본 ------------------------------------------------------- */
+        .car{
+            position:absolute;top:25px; /* 차선 내 수직 중앙(=90px 높이의 중간) */
+            width:60px;height:40px;border-radius:8px;
+            display:flex;align-items:center;justify-content:center;
+            color:#fff;font-weight:700;font-size:13px;
+            text-shadow:0 1px 2px rgba(0,0,0,.3)
+        }
+
+        /* 정상 흐름 차량 */
+        .normal-car{background:linear-gradient(135deg,#4caf50,#45a049)}
+        /* 사고 차량 */
+        .blocked-car{background:linear-gradient(135deg,#f44336,#d32f2f);animation:shake .45s infinite}
+        /* 대기 차량 */
+        .waiting-car{background:linear-gradient(135deg,#ff9800,#f57c00);animation:idle 1s ease-in-out infinite alternate}
+
+        /* ④ 애니메이션 ------------------------------------------------------ */
+        @keyframes drive{
+            from{left:-80px}
+            to  {left:calc(100% + 80px)}
+        }
+        @keyframes shake{
+            0%,100%{transform:translateX(0)}
+            20%,60%{transform:translateX(-2px)}
+            40%,80%{transform:translateX(2px)}
+        }
+        @keyframes idle{
+            0%{transform:translateY(0)}
+            100%{transform:translateY(-4px)}
+        }
+
+        /* ⑤ 범례 ----------------------------------------------------------- */
+        .legend{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin:24px 0}
+        .legend-item{display:flex;align-items:center;gap:8px;font-size:14px}
+        .legend-color{width:20px;height:20px;border-radius:4px}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header"><h1>Head-of-Line Blocking 현상</h1></header>
+
+    <main class="content">
+        <!-- ─── 고속도로 비유 ───────────────────────────────────────────── -->
+        <section class="diagram-section">
+            <h2 class="section-title">고속도로 비유로 이해</h2>
+
+            <div class="highway-wrapper">
+                <!-- 정상 차선 -->
+                <div class="lane">
+                    <span class="lane-label">정상 차선</span>
+
+                    <!-- 애니메이션 순차 지연을 위한 delay 속성 -->
+                    <div class="car normal-car" style="animation:drive 5s linear infinite;"></div>
+                    <div class="car normal-car" style="animation:drive 5s linear infinite -.8s;"></div>
+                    <div class="car normal-car" style="animation:drive 5s linear infinite -1.6s;"></div>
+                </div>
+
+                <!-- 사고 차선 -->
+                <div class="lane">
+                    <span class="lane-label">사고 차선</span>
+
+                    <div class="car blocked-car" style="left:240px">사고</div>
+
+                    <!-- 대기 차량은 사고 지점 이전에서 들썩이며 정지 -->
+                    <div class="car waiting-car" style="left:160px">차4</div>
+                    <div class="car waiting-car" style="left:80px">차5</div>
+                    <div class="car waiting-car" style="left:0">차6</div>
+                </div>
+            </div>
+
+            <!-- 범례 -->
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background:linear-gradient(135deg,#4caf50,#45a049)"></span>정상 처리
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background:linear-gradient(135deg,#f44336,#d32f2f)"></span>처리 실패
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background:linear-gradient(135deg,#ff9800,#f57c00)"></span>대기 중
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Kafka 파티션 실제 모습 ──────────────────────────────────── -->
+        <section class="diagram-section">
+            <h2 class="section-title">Kafka 파티션에서의 실제 상황</h2>
+
+            <div style="background:#f8f9fa;border-radius:12px;padding:32px">
+                <!-- 정상 파티션 -->
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px">
+                    <div class="message normal-message" style="background:linear-gradient(135deg,#4caf50,#45a049)">M1</div>
+                    <div class="message normal-message" style="background:linear-gradient(135deg,#4caf50,#45a049)">M2</div>
+                    <div class="message normal-message" style="background:linear-gradient(135deg,#4caf50,#45a049)">M3</div>
+                    <span style="font-size:24px">→</span>
+                    <div class="consumer" style="background:linear-gradient(135deg,#2196f3,#1976d2);width:90px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">Consumer<br>Thread</div>
+                    <span style="color:#4caf50;font-weight:700;margin-left:12px">✓ 정상 처리</span>
+                </div>
+
+                <!-- 블로킹 파티션 -->
+                <div style="display:flex;align-items:center;gap:16px">
+                    <div class="message failed-message" style="background:linear-gradient(135deg,#f44336,#d32f2f);animation:pulse 1s infinite">X</div>
+                    <div class="message waiting-message" style="background:linear-gradient(135deg,#ff9800,#f57c00)">M4</div>
+                    <div class="message waiting-message" style="background:linear-gradient(135deg,#ff9800,#f57c00)">M5</div>
+                    <div class="message waiting-message" style="background:linear-gradient(135deg,#ff9800,#f57c00)">M6</div>
+                    <div class="message waiting-message" style="background:linear-gradient(135deg,#ff9800,#f57c00)">M7</div>
+                    <span style="font-size:24px">🚫</span>
+                    <div class="consumer" style="background:linear-gradient(135deg,#f44336,#d32f2f);width:90px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">Stuck<br>Consumer</div>
+                    <span style="color:#f44336;font-weight:700;margin-left:12px">✗ 블로킹 발생</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── 설명 영역 ------------------------------------------------- -->
+        <aside style="background:#fff3cd;border:1px solid #ffeaa7;border-radius:12px;padding:24px;margin-top:32px;color:#856404">
+            <h3>🚨 Head-of-Line Blocking이란?</h3>
+            <p>특정 메시지 하나가 계속 실패하여 컨슈머가 해당 메시지에만 매달릴 때, 같은 파티션의 뒤따르는 정상 메시지까지&nbsp;대기하게 되는 현상입니다.</p>
+        </aside>
+
+        <aside style="background:#f8d7da;border:1px solid #f5c6cb;border-radius:12px;padding:24px;margin-top:24px;color:#721c24">
+            <h3>📉 시스템에 미치는 영향</h3>
+            <ul style="padding-left:20px;line-height:1.6">
+                <li><strong>처리량 급감:</strong> 하나의 실패 메시지로 파티션 전체 동작 정지</li>
+                <li><strong>지연 시간 증가:</strong> 정상 메시지까지 지연</li>
+                <li><strong>사용자 경험 악화:</strong> 응답 시간 지연 및 품질 저하</li>
+                <li><strong>리소스 낭비:</strong> 컨슈머 스레드 비효율 사용</li>
+            </ul>
+        </aside>
+    </main>
+</div>
+</body>
+</html>
