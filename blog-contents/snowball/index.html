@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스노우볼 효과 - 복리의 마법</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #5d6d7e;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .svg-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: white;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .description {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .quote {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #34495e;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .author {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .quote {
+                font-size: 1rem;
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: none;
+            color: #3498db;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* 반짝이는 효과 */
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .sparkle {
+            animation: sparkle 2s infinite;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="title">🏔️ 스노우볼 효과</h1>
+    <p class="subtitle">복리의 마법 - Warren Buffett's Snowball Theory</p>
+
+    <div class="svg-container">
+        <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- 눈 텍스처를 위한 패턴 -->
+                <pattern id="snowTexture" patternUnits="userSpaceOnUse" width="4" height="4">
+                    <rect width="4" height="4" fill="#f8f9fa"/>
+                    <circle cx="1" cy="1" r="0.5" fill="#e9ecef" opacity="0.7"/>
+                    <circle cx="3" cy="3" r="0.3" fill="#dee2e6" opacity="0.5"/>
+                </pattern>
+
+                <!-- 그라디언트 -->
+                <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#f5f5f5;stop-opacity:1" />
+                </linearGradient>
+
+                <radialGradient id="snowballGradient" cx="30%" cy="30%">
+                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                    <stop offset="70%" style="stop-color:#f8f9fa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+                </radialGradient>
+
+                <!-- 눈송이 모양 -->
+                <g id="snowflake">
+                    <path d="M0,-8 L0,8 M-8,0 L8,0 M-6,-6 L6,6 M-6,6 L6,-6" stroke="#ffffff" stroke-width="1" opacity="0.6"/>
+                    <circle cx="0" cy="0" r="1" fill="#ffffff" opacity="0.8"/>
+                </g>
+            </defs>
+
+            <!-- 배경 -->
+            <rect width="800" height="600" fill="url(#skyGradient)"/>
+
+            <!-- 눈 내리는 효과 -->
+            <g opacity="0.3">
+                <use href="#snowflake" x="100" y="50">
+                    <animateTransform attributeName="transform" type="translate"
+                                      values="100,50; 120,650" dur="8s" repeatCount="indefinite"/>
+                </use>
+                <use href="#snowflake" x="300" y="30">
+                    <animateTransform attributeName="transform" type="translate"
+                                      values="300,30; 280,650" dur="10s" repeatCount="indefinite"/>
+                </use>
+                <use href="#snowflake" x="500" y="80">
+                    <animateTransform attributeName="transform" type="translate"
+                                      values="500,80; 520,650" dur="9s" repeatCount="indefinite"/>
+                </use>
+                <use href="#snowflake" x="700" y="40">
+                    <animateTransform attributeName="transform" type="translate"
+                                      values="700,40; 680,650" dur="11s" repeatCount="indefinite"/>
+                </use>
+            </g>
+
+            <!-- 언덕 배경 -->
+            <path d="M0,400 Q200,350 400,380 T800,400 L800,600 L0,600 Z" fill="url(#snowTexture)"/>
+            <path d="M0,450 Q300,420 600,440 T800,450 L800,600 L0,600 Z" fill="#f8f9fa" opacity="0.8"/>
+
+            <!-- 언덕 굴곡 -->
+            <path d="M0,300 Q150,280 300,290 Q450,300 600,285 Q700,280 800,290"
+                  stroke="#e9ecef" stroke-width="2" fill="none" opacity="0.6"/>
+
+            <!-- 스노우볼 굴러가는 경로 -->
+            <path id="snowballPath"
+                  d="M100,290 Q200,320 350,340 Q500,360 650,380 Q750,390 780,400"
+                  stroke="none" fill="none"/>
+
+            <!-- 스노우볼 -->
+            <circle r="5" fill="url(#snowballGradient)" stroke="#dee2e6" stroke-width="1">
+                <animateMotion dur="6s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#snowballPath"/>
+                </animateMotion>
+                <animate attributeName="r"
+                         values="5;15;35;60;90;120"
+                         dur="6s"
+                         repeatCount="indefinite"/>
+                <!-- 회전 효과 -->
+                <animateTransform attributeName="transform"
+                                  type="rotate"
+                                  values="0;360;720;1080;1440;1800"
+                                  dur="6s"
+                                  repeatCount="indefinite"/>
+            </circle>
+
+            <!-- 스노우볼 그림자 -->
+            <ellipse rx="8" ry="3" fill="#000000" opacity="0.2">
+                <animateMotion dur="6s" repeatCount="indefinite">
+                    <mpath href="#snowballPath"/>
+                </animateMotion>
+                <animate attributeName="rx"
+                         values="8;25;50;80;120;160"
+                         dur="6s"
+                         repeatCount="indefinite"/>
+                <animateTransform attributeName="transform"
+                                  type="translate"
+                                  values="0,15; 0,25; 0,35; 0,45; 0,55; 0,65"
+                                  dur="6s"
+                                  repeatCount="indefinite"/>
+            </ellipse>
+
+            <!-- 스노우볼이 굴러가면서 남기는 흔적 -->
+            <path d="M100,305 Q200,335 350,355 Q500,375 650,395"
+                  stroke="#e9ecef"
+                  stroke-width="2"
+                  fill="none"
+                  opacity="0.6"
+                  stroke-dasharray="5,5">
+                <animate attributeName="stroke-dashoffset"
+                         values="0;-10"
+                         dur="1s"
+                         repeatCount="indefinite"/>
+            </path>
+
+            <!-- 텍스트 애니메이션 -->
+            <text x="400" y="120"
+                  font-family="Arial, sans-serif"
+                  font-size="48"
+                  font-weight="bold"
+                  text-anchor="middle"
+                  fill="#2c3e50"
+                  opacity="0">
+                SNOWBALL EFFECT
+                <animate attributeName="opacity"
+                         values="0;0;0;0;0;1"
+                         dur="6s"
+                         repeatCount="indefinite"/>
+                <animateTransform attributeName="transform"
+                                  type="scale"
+                                  values="0.5;0.5;0.5;0.5;0.5;1.2;1"
+                                  dur="6s"
+                                  repeatCount="indefinite"/>
+            </text>
+
+            <!-- 부제목 -->
+            <text x="400" y="170"
+                  font-family="Arial, sans-serif"
+                  font-size="24"
+                  text-anchor="middle"
+                  fill="#5d6d7e"
+                  opacity="0">
+                복리의 마법
+                <animate attributeName="opacity"
+                         values="0;0;0;0;0;0;1"
+                         dur="6s"
+                         repeatCount="indefinite"/>
+            </text>
+
+            <!-- 스노우볼 주변 눈 파편 효과 -->
+            <g opacity="0.7">
+                <circle cx="0" cy="0" r="2" fill="#ffffff">
+                    <animateMotion dur="6s" repeatCount="indefinite">
+                        <mpath href="#snowballPath"/>
+                    </animateMotion>
+                    <animateTransform attributeName="transform"
+                                      type="translate"
+                                      values="0,0; 10,-5; 20,-10; 30,-15; 40,-20; 50,-25"
+                                      dur="6s"
+                                      repeatCount="indefinite"/>
+                    <animate attributeName="opacity"
+                             values="0;0.3;0.7;0.5;0.3;0"
+                             dur="6s"
+                             repeatCount="indefinite"/>
+                </circle>
+
+                <circle cx="0" cy="0" r="1.5" fill="#f8f9fa">
+                    <animateMotion dur="6s" repeatCount="indefinite">
+                        <mpath href="#snowballPath"/>
+                    </animateMotion>
+                    <animateTransform attributeName="transform"
+                                      type="translate"
+                                      values="0,0; -8,-3; -16,-6; -24,-9; -32,-12; -40,-15"
+                                      dur="6s"
+                                      repeatCount="indefinite"/>
+                    <animate attributeName="opacity"
+                             values="0;0.4;0.8;0.6;0.4;0"
+                             dur="6s"
+                             repeatCount="indefinite"/>
+                </circle>
+            </g>
+
+            <!-- 속도 표시선 -->
+            <g opacity="0.4">
+                <line x1="0" y1="0" x2="-20" y2="-5" stroke="#bdc3c7" stroke-width="2">
+                    <animateMotion dur="6s" repeatCount="indefinite">
+                        <mpath href="#snowballPath"/>
+                    </animateMotion>
+                    <animate attributeName="opacity"
+                             values="0;0;0.3;0.6;0.8;1"
+                             dur="6s"
+                             repeatCount="indefinite"/>
+                </line>
+                <line x1="0" y1="0" x2="-35" y2="-8" stroke="#95a5a6" stroke-width="2">
+                    <animateMotion dur="6s" repeatCount="indefinite">
+                        <mpath href="#snowballPath"/>
+                    </animateMotion>
+                    <animate attributeName="opacity"
+                             values="0;0;0;0.4;0.7;1"
+                             dur="6s"
+                             repeatCount="indefinite"/>
+                </line>
+            </g>
+        </svg>
+    </div>
+
+    <div class="description">
+        <div class="quote">
+            "워런 버핏은 이를 스노우볼에 비유했습니다. 작은 눈덩이가 긴 언덕을 굴러 내려가면서 거대해지는 것처럼, 시간이 지날수록 가속도가 붙는다는 거죠."
+        </div>
+        <div class="author">- Warren Buffett, 투자의 현자</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="restartAnimation()">🔄 애니메이션 재시작</button>
+        <button class="btn" onclick="toggleAnimation()">⏸️ 일시정지/재생</button>
+    </div>
+
+    <div class="loading" id="loading">애니메이션을 다시 로딩중...</div>
+</div>
+
+<script>
+    let isPaused = false;
+
+    function restartAnimation() {
+        const loading = document.getElementById('loading');
+        loading.classList.add('active');
+
+        // SVG 애니메이션 재시작
+        const svg = document.querySelector('svg');
+        const clone = svg.cloneNode(true);
+        svg.parentNode.replaceChild(clone, svg);
+
+        setTimeout(() => {
+            loading.classList.remove('active');
+        }, 500);
+    }
+
+    function toggleAnimation() {
+        const svg = document.querySelector('svg');
+        const btn = document.querySelector('.controls .btn:last-child');
+
+        if (isPaused) {
+            svg.unpauseAnimations();
+            btn.innerHTML = '⏸️ 일시정지/재생';
+            isPaused = false;
+        } else {
+            svg.pauseAnimations();
+            btn.innerHTML = '▶️ 재생';
+            isPaused = true;
+        }
+    }
+
+    // 페이지 로드 시 환영 메시지
+    window.addEventListener('load', function() {
+        console.log('🏔️ 스노우볼 효과 애니메이션이 시작되었습니다!');
+    });
+
+    // 반응형 처리
+    window.addEventListener('resize', function() {
+        // 반응형 조정이 필요한 경우 여기에 코드 추가
+    });
+</script>
+</body>
+</html>
