@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>버블 정렬∙삽입 정렬 시각화</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .visualization-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .algorithm-title {
+            font-size: 1.8em;
+            color: #4c51bf;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 200px;
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .array-element {
+            width: 40px;
+            margin: 0 2px;
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            padding-bottom: 5px;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .array-element.comparing {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            transform: translateY(-10px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .array-element.swapping {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .array-element.sorted {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .array-element.current {
+            background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4c51bf;
+            margin-top: 5px;
+        }
+
+        .description {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .description p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .array-element {
+                width: 30px;
+                font-size: 12px;
+            }
+
+            .controls {
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>정렬 알고리즘 시각화</h1>
+
+    <!-- 버블 정렬 -->
+    <div class="visualization-section">
+        <div class="algorithm-title">🫧 버블 정렬 (Bubble Sort)</div>
+        <div id="bubbleArray" class="array-container"></div>
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startBubbleSort()">시작</button>
+            <button class="btn btn-secondary" onclick="stepBubbleSort()">한 단계씩</button>
+            <button class="btn btn-danger" onclick="resetBubbleSort()">리셋</button>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">비교 횟수</div>
+                <div id="bubbleComparisons" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">교환 횟수</div>
+                <div id="bubbleSwaps" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">현재 패스</div>
+                <div id="bubbleStep" class="stat-value">0</div>
+            </div>
+        </div>
+        <div class="description">
+            <p><strong>동작 원리:</strong> 인접한 두 원소를 비교하여 순서가 잘못되면 교환합니다. 가장 큰 원소가 거품처럼 배열의 끝으로 '떠올라갑니다'.</p>
+            <p><strong>시간 복잡도:</strong> O(n²)</p>
+        </div>
+    </div>
+
+    <!-- 삽입 정렬 -->
+    <div class="visualization-section">
+        <div class="algorithm-title">📊 삽입 정렬 (Insertion Sort)</div>
+        <div id="insertionArray" class="array-container"></div>
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startInsertionSort()">시작</button>
+            <button class="btn btn-secondary" onclick="stepInsertionSort()">한 단계씩</button>
+            <button class="btn btn-danger" onclick="resetInsertionSort()">리셋</button>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">비교 횟수</div>
+                <div id="insertionComparisons" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">이동 횟수</div>
+                <div id="insertionMoves" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">현재 위치</div>
+                <div id="insertionStep" class="stat-value">1</div>
+            </div>
+        </div>
+        <div class="description">
+            <p><strong>동작 원리:</strong> 배열을 정렬된 부분과 미정렬 부분으로 나누고, 미정렬 부분의 첫 번째 원소를 정렬된 부분의 적절한 위치에 삽입합니다.</p>
+            <p><strong>시간 복잡도:</strong> O(n²)</p>
+        </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);"></div>
+            <span class="legend-text">정렬되지 않음</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);"></div>
+            <span class="legend-text">비교 중</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);"></div>
+            <span class="legend-text">교환 중</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);"></div>
+            <span class="legend-text">현재 원소</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%);"></div>
+            <span class="legend-text">정렬 완료</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 전역 변수
+    let bubbleArray = [];
+    let insertionArray = [];
+    let bubbleState = null;
+    let insertionState = null;
+    let bubbleInterval = null;
+    let insertionInterval = null;
+
+    // 초기 배열 생성
+    function generateRandomArray() {
+        const arr = [];
+        for (let i = 0; i < 10; i++) {
+            arr.push(Math.floor(Math.random() * 90) + 10);
+        }
+        return arr;
+    }
+
+    // 배열 시각화 함수
+    function renderArray(arrayId, array, highlights = {}) {
+        const container = document.getElementById(arrayId);
+        container.innerHTML = '';
+
+        const maxValue = Math.max(...array);
+
+        array.forEach((value, index) => {
+            const element = document.createElement('div');
+            element.className = 'array-element';
+            element.style.height = `${(value / maxValue) * 180}px`;
+            element.textContent = value;
+
+            // 하이라이트 적용
+            if (highlights.comparing && highlights.comparing.includes(index)) {
+                element.classList.add('comparing');
+            }
+            if (highlights.swapping && highlights.swapping.includes(index)) {
+                element.classList.add('swapping');
+            }
+            if (highlights.sorted && highlights.sorted.includes(index)) {
+                element.classList.add('sorted');
+            }
+            if (highlights.current === index) {
+                element.classList.add('current');
+            }
+
+            container.appendChild(element);
+        });
+    }
+
+    // 버블 정렬 함수들
+    function resetBubbleSort() {
+        if (bubbleInterval) {
+            clearInterval(bubbleInterval);
+            bubbleInterval = null;
+        }
+        bubbleArray = generateRandomArray();
+        bubbleState = { i: 0, j: 0, comparisons: 0, swaps: 0, isRunning: false, sorted: false };
+        renderArray('bubbleArray', bubbleArray);
+        updateBubbleStats();
+    }
+
+    function updateBubbleStats() {
+        document.getElementById('bubbleComparisons').textContent = bubbleState.comparisons;
+        document.getElementById('bubbleSwaps').textContent = bubbleState.swaps;
+        document.getElementById('bubbleStep').textContent = bubbleState.i;
+    }
+
+    function stepBubbleSort() {
+        if (bubbleState.sorted) return;
+
+        const n = bubbleArray.length;
+
+        // 정렬 완료 체크
+        if (bubbleState.i >= n - 1) {
+            bubbleState.sorted = true;
+            renderArray('bubbleArray', bubbleArray, { sorted: Array.from({length: n}, (_, i) => i) });
+            return;
+        }
+
+        const highlights = {};
+
+        // 이미 정렬된 부분 표시
+        if (bubbleState.i > 0) {
+            highlights.sorted = Array.from({length: bubbleState.i}, (_, k) => n - 1 - k);
+        }
+
+        // 비교
+        if (bubbleState.j < n - bubbleState.i - 1) {
+            highlights.comparing = [bubbleState.j, bubbleState.j + 1];
+            bubbleState.comparisons++;
+
+            renderArray('bubbleArray', bubbleArray, highlights);
+            updateBubbleStats();
+
+            // 교환이 필요한 경우
+            if (bubbleArray[bubbleState.j] > bubbleArray[bubbleState.j + 1]) {
+                setTimeout(() => {
+                    // 교환
+                    [bubbleArray[bubbleState.j], bubbleArray[bubbleState.j + 1]] =
+                        [bubbleArray[bubbleState.j + 1], bubbleArray[bubbleState.j]];
+                    bubbleState.swaps++;
+
+                    const swapHighlights = {
+                        swapping: [bubbleState.j, bubbleState.j + 1],
+                        sorted: highlights.sorted
+                    };
+
+                    renderArray('bubbleArray', bubbleArray, swapHighlights);
+                    updateBubbleStats();
+
+                    bubbleState.j++;
+                }, 300);
+            } else {
+                bubbleState.j++;
+            }
+        } else {
+            // 다음 패스로
+            bubbleState.i++;
+            bubbleState.j = 0;
+        }
+    }
+
+    function startBubbleSort() {
+        if (bubbleState.isRunning || bubbleState.sorted) return;
+        bubbleState.isRunning = true;
+
+        bubbleInterval = setInterval(() => {
+            stepBubbleSort();
+            if (bubbleState.sorted) {
+                clearInterval(bubbleInterval);
+                bubbleInterval = null;
+                bubbleState.isRunning = false;
+            }
+        }, 600);
+    }
+
+    // 삽입 정렬 함수들
+    function resetInsertionSort() {
+        if (insertionInterval) {
+            clearInterval(insertionInterval);
+            insertionInterval = null;
+        }
+        insertionArray = generateRandomArray();
+        insertionState = {
+            i: 1,
+            j: 0,
+            comparisons: 0,
+            moves: 0,
+            isRunning: false,
+            key: 0,
+            phase: 'select', // 'select', 'compare', 'insert'
+            sorted: false,
+            tempArray: [...insertionArray]
+        };
+        renderArray('insertionArray', insertionArray, { sorted: [0] });
+        updateInsertionStats();
+    }
+
+    function updateInsertionStats() {
+        document.getElementById('insertionComparisons').textContent = insertionState.comparisons;
+        document.getElementById('insertionMoves').textContent = insertionState.moves;
+        document.getElementById('insertionStep').textContent = insertionState.i;
+    }
+
+    function stepInsertionSort() {
+        if (insertionState.sorted) return;
+
+        const n = insertionArray.length;
+
+        // 정렬 완료 체크
+        if (insertionState.i >= n) {
+            insertionState.sorted = true;
+            renderArray('insertionArray', insertionArray, { sorted: Array.from({length: n}, (_, i) => i) });
+            return;
+        }
+
+        const highlights = {
+            sorted: Array.from({length: insertionState.i}, (_, k) => k)
+        };
+
+        switch (insertionState.phase) {
+            case 'select':
+                // 현재 원소 선택
+                insertionState.key = insertionArray[insertionState.i];
+                insertionState.j = insertionState.i - 1;
+                insertionState.tempArray = [...insertionArray];
+                highlights.current = insertionState.i;
+                renderArray('insertionArray', insertionArray, highlights);
+                insertionState.phase = 'compare';
+                break;
+
+            case 'compare':
+                if (insertionState.j >= 0 && insertionArray[insertionState.j] > insertionState.key) {
+                    // 비교 시각화
+                    highlights.comparing = [insertionState.j, insertionState.j + 1];
+                    highlights.current = insertionState.j + 1;
+                    insertionState.comparisons++;
+                    renderArray('insertionArray', insertionArray, highlights);
+                    updateInsertionStats();
+
+                    // 원소 이동
+                    setTimeout(() => {
+                        insertionArray[insertionState.j + 1] = insertionArray[insertionState.j];
+                        insertionState.moves++;
+
+                        const moveHighlights = {
+                            sorted: Array.from({length: insertionState.i}, (_, k) => k),
+                            swapping: [insertionState.j, insertionState.j + 1],
+                            current: insertionState.j
+                        };
+                        renderArray('insertionArray', insertionArray, moveHighlights);
+                        updateInsertionStats();
+
+                        insertionState.j--;
+                    }, 300);
+                } else {
+                    // 삽입 위치 찾음
+                    insertionState.phase = 'insert';
+                }
+                break;
+
+            case 'insert':
+                // 키 삽입
+                insertionArray[insertionState.j + 1] = insertionState.key;
+                highlights.sorted = Array.from({length: insertionState.i + 1}, (_, k) => k);
+                renderArray('insertionArray', insertionArray, highlights);
+
+                // 다음 원소로
+                insertionState.i++;
+                insertionState.phase = 'select';
+                updateInsertionStats();
+                break;
+        }
+    }
+
+    function startInsertionSort() {
+        if (insertionState.isRunning || insertionState.sorted) return;
+        insertionState.isRunning = true;
+
+        insertionInterval = setInterval(() => {
+            stepInsertionSort();
+            if (insertionState.sorted) {
+                clearInterval(insertionInterval);
+                insertionInterval = null;
+                insertionState.isRunning = false;
+            }
+        }, 600);
+    }
+
+    // 초기화
+    function init() {
+        resetBubbleSort();
+        resetInsertionSort();
+    }
+
+    // 페이지 로드 시 초기화
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>
