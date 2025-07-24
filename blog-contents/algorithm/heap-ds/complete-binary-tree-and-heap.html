@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>완전 이진 트리와 배열 인덱스 관계</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .tree-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .array-item {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #bdc3c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .array-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .array-item.selected {
+            background-color: #9b59b6 !important;
+            color: white;
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .array-item.parent {
+            background-color: #34495e !important;
+            color: white;
+        }
+
+        .array-item.child {
+            background-color: #16a085 !important;
+            color: white;
+        }
+
+        .level-0 { background-color: #e74c3c; color: white; border-color: #c0392b; }
+        .level-1 { background-color: #3498db; color: white; border-color: #2980b9; }
+        .level-2 { background-color: #27ae60; color: white; border-color: #229954; }
+        .level-3 { background-color: #f39c12; color: white; border-color: #d68910; }
+
+        .info-box {
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .info-box h3 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #34495e;
+        }
+
+        .formula-line {
+            margin: 8px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .highlight {
+            background-color: #f1c40f;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .tree-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tree-node.selected {
+            transform: scale(1.2);
+        }
+
+        .tree-edge {
+            transition: all 0.3s ease;
+        }
+
+        .tree-edge.highlight {
+            stroke-width: 4 !important;
+            stroke: #9b59b6 !important;
+        }
+
+        @media (max-width: 768px) {
+            .array-item {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>완전 이진 트리와 배열 인덱스 관계</h2>
+
+    <div class="visualization">
+        <!-- 트리 시각화 -->
+        <div class="tree-container">
+            <svg viewBox="0 0 800 320" id="treeSvg">
+                <!-- 트리 노드와 엣지는 JavaScript로 생성 -->
+            </svg>
+        </div>
+
+        <!-- 컨트롤 -->
+        <div class="controls">
+            <button onclick="selectNode(currentIndex - 1)" id="prevBtn">← 이전</button>
+            <button onclick="autoPlay()" id="playBtn">자동 재생 ▶</button>
+            <button onclick="selectNode(currentIndex + 1)" id="nextBtn">다음 →</button>
+        </div>
+
+        <!-- 배열 시각화 -->
+        <div class="array-container" id="arrayContainer">
+            <!-- 배열 요소는 JavaScript로 생성 -->
+        </div>
+
+        <!-- 정보 박스 -->
+        <div class="info-box">
+            <h3>선택된 노드: <span class="highlight" id="selectedIndex">-</span></h3>
+            <div class="formula">
+                <div class="formula-line">
+                    <span>부모 인덱스:</span>
+                    <span id="parentFormula">-</span>
+                    <span>=</span>
+                    <span class="highlight" id="parentIndex">-</span>
+                </div>
+                <div class="formula-line">
+                    <span>왼쪽 자식:</span>
+                    <span id="leftChildFormula">-</span>
+                    <span>=</span>
+                    <span class="highlight" id="leftChildIndex">-</span>
+                </div>
+                <div class="formula-line">
+                    <span>오른쪽 자식:</span>
+                    <span id="rightChildFormula">-</span>
+                    <span>=</span>
+                    <span class="highlight" id="rightChildIndex">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const arraySize = 10;
+    let currentIndex = 0;
+    let isPlaying = false;
+    let playInterval = null;
+
+    // 트리 노드 위치 계산
+    function getNodePosition(index) {
+        const level = Math.floor(Math.log2(index + 1));
+        const positionInLevel = index - (Math.pow(2, level) - 1);
+        const nodesInLevel = Math.pow(2, level);
+        const levelWidth = 600;
+        const x = 400 + (positionInLevel - (nodesInLevel - 1) / 2) * (levelWidth / nodesInLevel);
+        const y = 50 + level * 80;
+        return { x, y, level };
+    }
+
+    // SVG 트리 생성
+    function createTree() {
+        const svg = document.getElementById('treeSvg');
+        svg.innerHTML = '';
+
+        // 엣지 그리기
+        for (let i = 0; i < arraySize; i++) {
+            const leftChild = 2 * i + 1;
+            const rightChild = 2 * i + 2;
+
+            if (leftChild < arraySize) {
+                const parent = getNodePosition(i);
+                const child = getNodePosition(leftChild);
+                const edge = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                edge.setAttribute('x1', parent.x);
+                edge.setAttribute('y1', parent.y);
+                edge.setAttribute('x2', child.x);
+                edge.setAttribute('y2', child.y);
+                edge.setAttribute('stroke', '#7f8c8d');
+                edge.setAttribute('stroke-width', '2');
+                edge.setAttribute('class', 'tree-edge');
+                edge.setAttribute('id', `edge-${i}-${leftChild}`);
+                svg.appendChild(edge);
+            }
+
+            if (rightChild < arraySize) {
+                const parent = getNodePosition(i);
+                const child = getNodePosition(rightChild);
+                const edge = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                edge.setAttribute('x1', parent.x);
+                edge.setAttribute('y1', parent.y);
+                edge.setAttribute('x2', child.x);
+                edge.setAttribute('y2', child.y);
+                edge.setAttribute('stroke', '#7f8c8d');
+                edge.setAttribute('stroke-width', '2');
+                edge.setAttribute('class', 'tree-edge');
+                edge.setAttribute('id', `edge-${i}-${rightChild}`);
+                svg.appendChild(edge);
+            }
+        }
+
+        // 노드 그리기
+        for (let i = 0; i < arraySize; i++) {
+            const pos = getNodePosition(i);
+
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('class', 'tree-node');
+            g.setAttribute('id', `tree-node-${i}`);
+            g.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+            g.onclick = () => selectNode(i);
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', '25');
+            circle.setAttribute('fill', getColorByLevel(pos.level));
+            circle.setAttribute('stroke', getDarkColorByLevel(pos.level));
+            circle.setAttribute('stroke-width', '2');
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('y', '6');
+            text.setAttribute('font-size', '20');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', 'white');
+            text.textContent = i;
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            svg.appendChild(g);
+        }
+    }
+
+    // 배열 생성
+    function createArray() {
+        const container = document.getElementById('arrayContainer');
+        container.innerHTML = '';
+
+        for (let i = 0; i < arraySize; i++) {
+            const div = document.createElement('div');
+            div.className = `array-item level-${getNodePosition(i).level}`;
+            div.textContent = i;
+            div.onclick = () => selectNode(i);
+            container.appendChild(div);
+        }
+    }
+
+    // 색상 헬퍼 함수
+    function getColorByLevel(level) {
+        const colors = ['#e74c3c', '#3498db', '#27ae60', '#f39c12'];
+        return colors[level] || '#95a5a6';
+    }
+
+    function getDarkColorByLevel(level) {
+        const colors = ['#c0392b', '#2980b9', '#229954', '#d68910'];
+        return colors[level] || '#7f8c8d';
+    }
+
+    // 노드 선택
+    function selectNode(index) {
+        if (index < 0 || index >= arraySize) return;
+
+        currentIndex = index;
+
+        // 모든 요소 초기화
+        document.querySelectorAll('.array-item').forEach(item => {
+            item.classList.remove('selected', 'parent', 'child');
+        });
+        document.querySelectorAll('.tree-node').forEach(node => {
+            node.classList.remove('selected');
+        });
+        document.querySelectorAll('.tree-edge').forEach(edge => {
+            edge.classList.remove('highlight');
+        });
+
+        // 현재 노드 하이라이트
+        document.querySelectorAll('.array-item')[index].classList.add('selected');
+        document.getElementById(`tree-node-${index}`).classList.add('selected');
+
+        // 부모 노드 하이라이트
+        const parentIndex = Math.floor((index - 1) / 2);
+        if (parentIndex >= 0 && index > 0) {
+            document.querySelectorAll('.array-item')[parentIndex].classList.add('parent');
+            document.getElementById(`edge-${parentIndex}-${index}`)?.classList.add('highlight');
+        }
+
+        // 자식 노드 하이라이트
+        const leftChild = 2 * index + 1;
+        const rightChild = 2 * index + 2;
+
+        if (leftChild < arraySize) {
+            document.querySelectorAll('.array-item')[leftChild].classList.add('child');
+            document.getElementById(`edge-${index}-${leftChild}`)?.classList.add('highlight');
+        }
+        if (rightChild < arraySize) {
+            document.querySelectorAll('.array-item')[rightChild].classList.add('child');
+            document.getElementById(`edge-${index}-${rightChild}`)?.classList.add('highlight');
+        }
+
+        // 정보 업데이트
+        updateInfo();
+
+        // 버튼 상태 업데이트
+        document.getElementById('prevBtn').disabled = index === 0;
+        document.getElementById('nextBtn').disabled = index === arraySize - 1;
+    }
+
+    // 정보 업데이트
+    function updateInfo() {
+        document.getElementById('selectedIndex').textContent = currentIndex;
+
+        const parentIndex = Math.floor((currentIndex - 1) / 2);
+        document.getElementById('parentFormula').textContent = `(${currentIndex} - 1) / 2`;
+        document.getElementById('parentIndex').textContent = currentIndex > 0 ? parentIndex : '없음';
+
+        const leftChild = 2 * currentIndex + 1;
+        const rightChild = 2 * currentIndex + 2;
+
+        document.getElementById('leftChildFormula').textContent = `2 × ${currentIndex} + 1`;
+        document.getElementById('leftChildIndex').textContent = leftChild < arraySize ? leftChild : '없음';
+
+        document.getElementById('rightChildFormula').textContent = `2 × ${currentIndex} + 2`;
+        document.getElementById('rightChildIndex').textContent = rightChild < arraySize ? rightChild : '없음';
+    }
+
+    // 자동 재생
+    function autoPlay() {
+        if (isPlaying) {
+            isPlaying = false;
+            clearInterval(playInterval);
+            document.getElementById('playBtn').textContent = '자동 재생 ▶';
+        } else {
+            isPlaying = true;
+            document.getElementById('playBtn').textContent = '일시정지 ⏸';
+            playInterval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % arraySize;
+                selectNode(currentIndex);
+            }, 1500);
+        }
+    }
+
+    // 초기화
+    createTree();
+    createArray();
+    selectNode(0);
+</script>
+</body>
+</html>
