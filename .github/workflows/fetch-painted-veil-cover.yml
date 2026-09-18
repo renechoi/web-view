@@ -1,0 +1,38 @@
+name: Fetch Painted Veil cover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fetch-painted-veil-cover.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-cover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download cover
+        run: |
+          mkdir -p blog-contents/book-club/moon-yeolbyeong
+          curl -fL --retry 3 -A "Mozilla/5.0" \
+            "https://image.yes24.com/goods/2368940/XL" \
+            -o blog-contents/book-club/moon-yeolbyeong/2026-04-the-painted-veil.jpg
+          file blog-contents/book-club/moon-yeolbyeong/2026-04-the-painted-veil.jpg
+          test -s blog-contents/book-club/moon-yeolbyeong/2026-04-the-painted-veil.jpg
+          test "$(stat -c%s blog-contents/book-club/moon-yeolbyeong/2026-04-the-painted-veil.jpg)" -gt 5000
+
+      - name: Commit cover
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add blog-contents/book-club/moon-yeolbyeong/2026-04-the-painted-veil.jpg
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Add The Painted Veil cover for Tistory book club post"
+            git push
+          fi
